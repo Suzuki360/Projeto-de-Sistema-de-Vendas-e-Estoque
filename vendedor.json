@@ -1,0 +1,10 @@
+[
+    {
+        "nome": "Vendedor",
+        "cpf": "456",
+        "telefone": "456",
+        "endereco": "judas",
+        "email": "vendedor@gmail.com",
+        "senha": "codigo"
+    }
+]
