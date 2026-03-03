@@ -194,7 +194,7 @@ def NovaVenda(cargo):
             produto_id = input("Digite o ID do produto que deseja vender: ")
             buscado = False
             for produto in produtos:
-                if(produto_id==produtos):
+                if(produto_id==produto._ID):
                     print(f"Produto {produto.nome_pro}:")
                     print(f"Marca: {produto.marca}")
                     print(f"Quantidade em Estoque: {produto.quantidade}")
@@ -205,13 +205,13 @@ def NovaVenda(cargo):
                     custo = produto.preco_custo * qua
                     lucro = compra - custo
                     print(f"\n O valor total da compra foi de :{compra:.2f}R$")
-                    confirmar = (input("Deseja realizar a Compra? (s/n)")).lower
+                    confirmar = (input("Deseja realizar a Compra? (s/n)")).lower()
                     if(confirmar=="s"):
-                        Venda.estoque()
+                        produto.quantidade = int(produto.quantidade) - qua
                         cliente.valortotal += compra
                         horaagr = datetime.now()
                         hora = horaagr.timestamp()
-                        _ID_venda = random.randit(10000,19999)
+                        _ID_venda = random.randint(10000,19999)
                         venda = Venda(_ID_venda, produto_id, produto.nome_pro, acessonome, acessocpf, cliente.nome, cpf_cliente, 
                                       qua, produto.preco_venda, produto.preco_custo, compra, custo, lucro, hora)
                         vendas.append(venda)
@@ -325,7 +325,7 @@ def CadastroGerentes():
         endereco = input("Endereco: ")
         email = input("Email: ")
         senha = input("Senha: ")
-        gerente = Cliente(nome, cpf, telefone, endereco, email, senha)
+        gerente = Gerente(nome, cpf, telefone, endereco, email, senha)
         gerentes.append(gerente)
 
     dados_dict = [gerente.to_dict_vendedor() for gerente in gerentes]
@@ -447,11 +447,11 @@ def Relatorio():
         elif x == "2":
             LimparTela()
             status = "2"
-            cpf = print("Digite o CPF do Cliente: ")
+            cpf = input("Digite o CPF do Cliente: ")
             encontrado =  False
             for cliente in clientes:
                 if cpf == cliente.cpf:
-                    FiltroHoras()
+                    FiltroHoras(cpf, status)
                     encontrado = True
             if not encontrado:
                 print("Cliente não Encontrado!")
@@ -459,7 +459,7 @@ def Relatorio():
         elif x == "3":
             status = "3"
             LimparTela()
-            ImprimirRelatorio()
+            ImprimirRelatorio(vendas)
             pausar
         elif x == "4":
             LimparTela()

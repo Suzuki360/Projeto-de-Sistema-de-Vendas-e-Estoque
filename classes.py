@@ -99,7 +99,7 @@ class Produto:
             dados["preco_custo"]
         )
 
-class Venda(Produto):
+class Venda:
     def __init__(self, _ID_venda, _ID_produto, nome_produto, nome_vendedor, cpf_vendedor, nome_do_cliente,
                  cpf_cliente, qua, preco_venda, preco_custo, valortotal,custototal, lucrototal, data_hora):
         self._ID_venda = _ID_venda
@@ -158,12 +158,3 @@ class Venda(Produto):
     def registroparahora(self):
         diahora = datetime.fromtimestamp(self.data_hora)
         return diahora
-
-    def estoque(self):
-        if(self.qua<=self.produto.quantidade):
-            self.produto.quantidade = self.produto.quantidade - self.qua
-            print("Compra realizada com Sucesso!!")
-            return 1
-        else:
-            print("Estoque Insuficiente!")
-            return 0
