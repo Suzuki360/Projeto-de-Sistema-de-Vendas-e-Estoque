@@ -29,12 +29,19 @@ class Pessoa:
         )
 
 class Funcionario(Pessoa):
-    def __init__(self,nome, cpf, telefone,endereco, email, senha):
+    def __init__(self,nome, cpf, telefone,endereco, email, senha, cargo):
         # O super() manda os dados para o __init__ de Pessoa
         super().__init__(nome, cpf, telefone, endereco, email)
         self.senha = senha
-
+        self.cargo = cargo
     #função que trasnforma Objeto em Lista de Dicionarios
+
+    def cargoreal(self):
+        if(self.cargo == 1):
+            return "Gerente"
+        elif(self.cargo == 2):
+            return "Vendedor"
+
     def to_dict_vendedor(self):
         return {
             "nome" : self.nome,
@@ -55,10 +62,6 @@ class Funcionario(Pessoa):
             dados["email"],
             dados["senha"]
         )
-
-class Gerente(Funcionario):
-    def __init__(self,nome, cpf, telefone,endereco, email, senha):
-        super().__init__(nome, cpf, telefone, endereco, email,senha)
 
 class Cliente(Pessoa): 
     def __init__(self, nome, cpf,telefone, endereco, email, valortotal):

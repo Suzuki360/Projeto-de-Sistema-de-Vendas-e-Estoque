@@ -3,6 +3,7 @@ from datetime import datetime
 import os
 import json
 import random
+import uuid
 
 def LimparTela():
     if os.name == "nt":
@@ -13,103 +14,113 @@ def LimparTela():
 def pausar():
     input(" \n Pressione ENTER para continuar...")
 
-gerentes = []
-adm = Gerente("Admin", "123", "123", "algum lugar", "admin@gmail", "Senha" )
-gerentes = []
-gerentes.append(adm)
-clientes = []
-vendedores = []
-produtos = []
-vendas = []
+funcionarios = {}
+funcionario = Funcionario("Admin", "123", "123", "algum lugar", "admin@gmail", "Senha", 1 )
+v1 = Funcionario("Vendedor", "456", "456", "Seila", "vendedor@gmail.com", "Codigo", 2)
+funcionarios["123"] = funcionario
+funcionarios["456"] = v1
+clientes = {}
+produtos = {}
+vendas = {}
 verificar = 0
-acessonome = ""
-acessocpf = ""
 
-#lendo arquivo json
-if os.path.exists("gerentes.json"):
-    with open("gerentes.json", "r") as arquivo:
+#lendoarquivosjson
+if os.path.exists("funcionarios.json"):
+    with open("funcionarios.json", "r") as arquivo:
         dados = json.load(arquivo)
-    #transformando Lista em Json para Objeto
-    for d in dados:
-            gerente = Gerente.from_dict_vendedor(d)
-            gerentes.append(gerente)
+    for cpf_fun, info in dados.items():
+        funcionario_obj = Funcionario.from_dict_vendedor(info)
+        vendas[cpf_fun] = funcionario_obj
 
-if os.path.exists("vendedor.json"):
-    with open("vendedores.json", "r") as arquivo:
+if os.path.exists("clientes.json"):
+    with open("clientes.json", "r") as arquivo:
         dados = json.load(arquivo)
-    #transformando Lista em Json para Objeto
-    for d in dados:
-            vendedor = Funcionario.from_dict_vendedor(d)
-            vendedores.append(vendedor)
+    for cpf_cli, info in dados.items():
+        cliente_obj = Cliente.from_dict(info)
+        vendas[cpf_cli] = cliente_obj
 
 if os.path.exists("produtos.json"):
     with open("produtos.json", "r") as arquivo:
         dados = json.load(arquivo)
     #transformando Lista em Json para Objeto
-    for d in dados:
-            produto = Produto.from_dict_produto(d)
-            produtos.append(produto)
+    for id_pro, info in dados.items():
+        prod_obj = Produto.from_dict_produto(info)
+        vendas[id_pro] = prod_obj
 
 if os.path.exists("vendas.json"):
     with open("vendas.json", "r") as arquivo:
         dados = json.load(arquivo)
-    #transformando Lista em Json para Objeto
-    for d in dados:
-            venda = Venda.from_dict_venda(d)
-            vendas.append(venda)
+    for id_venda, info in dados.items():
+        venda_obj = Venda.from_dict_venda(info)
+        vendas[id_venda] = venda_obj
+
+def Verificarfunc(verificar):
+    if verificar in funcionarios:
+        return True
+    else:
+        return False
+
+    pausar()
+
+def verificarclientes(verificar):
+    if verificar in clientes:
+        return True
+    else:
+        return False
 
 def salvarprodutos(lista):
-    dados_dict = [produto.to_dict_produto() for produto in lista]
-    with open("produtos.json", "w") as arquivo:
-        json.dump(dados_dict, arquivo, indent=4)
+    prod_temp = {id_venda: v.to_dict() for id_venda, v in produtos.items()}
+    with open("vendas.json", "w") as arquivo:
+        json.dump(prod_temp, arquivo, indent=4)
 
 def salvarvendas(lista):
-    dados_dict = [venda.to_dict_venda() for venda in lista]
+    vendas_temp = {id_venda: v.to_dict() for id_venda, v in vendas.items()}
     with open("vendas.json", "w") as arquivo:
-        json.dump(dados_dict, arquivo, indent=4)
+        json.dump(vendas_temp, arquivo, indent=4)
+
+def Encontrarproduto(_ID):
+    if _ID in produtos:
+        return True
+    else:
+        False
 
 def CadastrarProdutos():
     LimparTela()
     opcao = input("Voce deseja (Cadastrar produtos - 1) ou (Excluir Produto - 2)? ")
     if(opcao == "1"):
         nome_pro = input("Digite o Nome do Produto: ")
-        _ID = input("Digite o ID do Produto: ")
+        _ID = input("Digite o ID do Produto: ").strip()
         marca = input("Marca: ")
         quantidade = input("Quantidade: ")
         preco_venda = input("Preço Vendido: ")
         preco_custo = input("Preço de Compra: ")
     elif opcao=="2":
-        apagado = input("Digite o ID do Produto que deseja apagar: ")
-        encontrado = False
-        for produto in produtos:
-             if(apagado==produto._ID):
-                 produtos.remove(produto)
-                 encontrado = True
-                 print(f"\nCliente {produto.nome_pro} removido com sucesso!")
-                 encontrado = True
-                 break
+        _ID = input("Digite o ID do Produto que deseja apagar: ").strip()
+        encontrado = Encontrarproduto(_ID)
+        if encontrado:
+            print(f"Produto {produtos[_ID].nome_pro} removido com sucesso! ")
+            del produtos[_ID]
+            produtos.remove(produto)
         if not encontrado:
             print("\n[!] ID não encontrado.")
 
     produto = Produto(nome_pro, _ID, marca, quantidade,preco_venda, preco_custo)
-    produtos.append(produto)
+    produtos[_ID] = produto
     salvarprodutos(produtos)
     pausar()
 
-def AtualizarEstoque(cargo):
+def AtualizarEstoque(cpf):
     LimparTela()
-    _ID = input("Digite o ID do Produto que deseja atualizar: ")
-    encontrado = False
-    for produto in produtos:
-        if(produto.id==_ID):
-            print(f"Atualizando dados do Produto {produto.nome_pro}: ")
-            if(cargo=="2"):
-                produto.nome_pro = input("Novo nome: ")
-                produto.marca = input("Nova marca: ")
-            produto.quantidade = input("Quantidade do Produto em Estoque: ")
-            break
-        else:
-            print("\n Produto não Encontrado!!")
+    _ID = input("Digite o ID do Produto que deseja atualizar: ").strip()
+    encontrado = Encontrarproduto(_ID)
+    if encontrado:
+        print(f"Atualizando dados do Produto {produtos[_ID].nome_pro}: ")
+        if(funcionarios[cpf].cargo == 1):
+            produtos[_ID].nome_pro = input("Novo nome: ")
+            produtos[_ID].marca = input("Nova marca: ")
+        produtos[_ID].quantidade = input("Quantidade do Produto em Estoque: ")
+    if not encontrado:
+        print("\n Produto não Encontrado!!")
     salvarprodutos(produtos)
     pausar()
 
@@ -124,115 +135,92 @@ def ListarProdutos():
         print(f"Preco de venda: {produto.preco_venda}")
         print(f"Preco de compra: {produto.preco_custo}")
 
-def AlterarPreco(cargo):
+def AlterarPreco(cpf):
     LimparTela()
-    ID = input("Digite o ID do Produto que deseja Alterar preços: ")
-    encontrado = False
-    for produto in produtos:
-        if(produto.id==ID):
-            print(f"Atualizando preços do Produto {produto.nome_pro}: ")
-            if(cargo=="2"):
-                produto.preco_custo = input("Novo preço de Custo: ")
-            produto.preco_venda = input("Preço de Venda: ")
-            break
-        else:
-            print("\n Produto não Encontrado!!")
+    _ID = input("Digite o ID do Produto que deseja Alterar preços: ").strip()
+    encontrado = Encontrarproduto(cpf)
+    if encontrado:
+        print(f"Atualizando preços do Produto {produtos[_ID].nome_pro}: ")
+        if(produtos[_ID].cargo==1):
+            produtos[_ID].preco_custo = input("Novo preço de Custo: ")
+        produtos[_ID].preco_venda = input("Preço de Venda: ")
+    if not encontrado:
+        print("\n Produto não Encontrado!!")
     salvarprodutos(produtos)
     pausar()
 
-def Estoque(cargo):
+def Estoque(cpf):
     LimparTela()
     while True:
         print("Opções de Estoque: ")
-        if(cargo=="2"):
-            print("1 - Atualizar Estoque")
-            print("2 - Listar Produtos")
-            print("3 - Alterar Preço")
-            print("4 - Sair")
+        print("1 - Atualizar Estoque")
+        print("2 - Listar Produtos")
+        print("3 - Alterar Preço")
+        if(funcionarios[cpf].cargo == 1):
+            print("4 - Cadastrar ou Excluir Produtos")
+        print("5 - Sair")
 
-            escolha = input("Escolha uma opção: ")
-            if escolha == "1":
-                AtualizarEstoque()
-            elif escolha == "2":
-                ListarProdutos(cargo)
-            elif escolha == "3":
-                AlterarPreco(cargo)
-            elif escolha == "4":
-                print("Você escolheu sair!")
-                break
+        escolha = input("Escolha uma opção: ")
+        if escolha == "1":
+            AtualizarEstoque(cpf)
+        elif escolha == "2":
+            ListarProdutos(cpf)
+        elif escolha == "3":
+            AlterarPreco(cpf)
+        if(funcionarios[cpf].cargo == 1):
+            if escolha == "4":
+                    CadastrarProdutos()
             else:
                 print("Opção Digitada Invalida.")
-        if(cargo=="1"):
-            print("1 - Cadastrar ou Excluir Produtos")
-            print("2 - Atualizar Estoque")
-            print("3 - Listar Produtos")
-            print("4 - Alterar Preço")
-            print("5 - Sair")
+        elif escolha == "5":
+            print("Você escolheu sair!")
+            break 
+        else:
+            print("Opção Digitada Invalida.")
+    pass
 
-            escolha = input("Escolha uma opção: ")
-            if escolha == "1":
-                CadastrarProdutos()
-            elif escolha == "2":
-                AtualizarEstoque(cargo)
-            elif escolha == "3":
-                ListarProdutos(cargo)
-            elif escolha == "4":
-                AlterarPreco(cargo)
-            elif escolha == "5":
-                print("Você escolheu sair!")
-                break
-            else:
-                print("Opção Digitada Invalida.")
-
-def NovaVenda(cargo):
+def NovaVenda(cpf):
     LimparTela()
     cpf_cliente = input("Digite o CPF do cliente que deseja fazer a venda: ")
-    encontrado = False
-    for cliente in clientes:
-        if(cpf_cliente==cliente.cpf):
-            print(f"Cliente : {cliente.nome}")
-            produto_id = input("Digite o ID do produto que deseja vender: ")
-            buscado = False
-            for produto in produtos:
-                if(produto_id==produto._ID):
-                    print(f"Produto {produto.nome_pro}:")
-                    print(f"Marca: {produto.marca}")
-                    print(f"Quantidade em Estoque: {produto.quantidade}")
-                    print(f"Preco de venda: {produto.preco_venda}")
-                    print(F"Quantidade do Produto em Estoque: {produto.quantidade}")
-                    qua = int(input("\n Digite a quantidade de Produtos que deseja vender: "))
-                    compra = produto.preco_venda * qua
-                    custo = produto.preco_custo * qua
-                    lucro = compra - custo
-                    print(f"\n O valor total da compra foi de :{compra:.2f}R$")
-                    confirmar = (input("Deseja realizar a Compra? (s/n)")).lower()
-                    if(confirmar=="s"):
-                        produto.quantidade = int(produto.quantidade) - qua
-                        cliente.valortotal += compra
-                        horaagr = datetime.now()
-                        hora = horaagr.timestamp()
-                        _ID_venda = random.randint(10000,19999)
-                        venda = Venda(_ID_venda, produto_id, produto.nome_pro, acessonome, acessocpf, cliente.nome, cpf_cliente, 
-                                      qua, produto.preco_venda, produto.preco_custo, compra, custo, lucro, hora)
-                        vendas.append(venda)
-                        salvarprodutos(produtos)
-                        salvarvendas(vendas)
-                        pausar()
-                        break
-                    else:
-                        print("Compra cancelada")
+    encontrado = verificarclientes(cpf_cliente)
+    if encontrado:
+        print(f"Cliente : {clientes[cpf].nome}")
+        produto_id = input("Digite o ID do produto que deseja vender: ").strip()
+        buscado = Encontrarproduto(produto_id)
+        if buscado:
+            print(f"Produto {produtos[produto_id].nome_pro}:")
+            print(f"Marca: {produtos[produto_id].marca}")
+            print(f"Quantidade em Estoque: {produtos[produto_id].quantidade}")
+            print(f"Preco de venda: {produtos[produto_id].preco_venda}")
+            qua = int(input("\n Digite a quantidade de Produtos que deseja vender: "))
+            compra = produtos[produto_id].preco_venda * qua
+            custo = produtos[produto_id].preco_custo * qua
+            lucro = compra - custo
+            print(f"\n O valor total da compra foi de :{compra:.2f}R$")
+            confirmar = (input("Deseja realizar a Compra? (s/n)")).lower()
+            if(confirmar=="s"):
+                produtos[produto_id].quantidade = int(produtos[produto_id].quantidade) - qua
+                clientes[cpf_cliente].valortotal += compra
+                horaagr = datetime.now()
+                hora = horaagr.timestamp()
+                _ID_venda = str(uuid.uuid4()).split('-')[0].upper()
+                venda = Venda(_ID_venda, produto_id, produtos[produto_id].nome_pro, funcionarios[cpf].nome, cpf, clientes[cpf_cliente].nome, cpf_cliente, 
+                                      qua, produtos[produto_id].preco_venda, produtos[produto_id].preco_custo, compra, custo, lucro, hora)
+                vendas[_ID_venda] = venda
+                salvarprodutos(produtos)
+                salvarvendas(vendas)
+                pausar()
+            else:
+                 print("Compra cancelada")
                     
-            if not buscado:
-                print("Produto não Encontrado no sistema.")
-                if(cargo=="1"):
-                    ver = (input("Deseja Cadastrar o produto(s/n)? ")).lower()
-                    if(ver == "s"):
-                        print("Levando a tela de Cadastro de Produtos")
-                        pausar()
-                        CadastrarProdutos()
-                else:
-                    break
-            break
+        if not buscado:
+            print("Produto não Encontrado no sistema.")
+            if(funcionarios[cpf].cargo == 1):
+                ver = (input("Deseja Cadastrar o produto(s/n)? ")).lower()
+                if(ver == "s"):
+                    print("Levando a tela de Cadastro de Produtos")
+                    pausar()
+                    CadastrarProdutos()
     if not encontrado:
         print("Cliente não encontrado, Levando para tela de Cadastro de Clientes...")
         pausar()
@@ -245,16 +233,14 @@ def CadastroClientes():
         print("Os clientes cadastrados são: ")
         for cliente in clientes:
             print(f"Cliente: {cliente.nome} - CPF: {cliente.cpf}")
-    cpf = input("Digite o CPF do Cliente que deseja Cadastrar/Atualizar Dados: ")
-    encontrado = False
-    for cliente in clientes:
-        if(cpf==cliente.cpf):
-            print(f"Atualizando dados do Cliente {cliente.nome} ")
-            cliente.telefone = input("Novo Telefone: ")
-            cliente.endereco = input("Novo Endereco: ")
-            cliente.email = input("Novo Email: ")
-            encontrado = True
-    if(encontrado == False):
+    cpf = input("Digite o CPF do Cliente que deseja Cadastrar/Atualizar Dados: ").strip()
+    encontrado = verificarclientes(cpf)
+    if encontrado:
+        print(f"Atualizando dados do Cliente {clientes[cpf].nome} ")
+        clientes[cpf].telefone = input("Novo Telefone: ")
+        clientes[cpf].endereco = input("Novo Endereco: ")
+        clientes[cpf].email = input("Novo Email: ")
+    if not encontrado:
         print("Digite os dados do novo Cliente: ")
         nome = input("Nome: ")
         telefone = input("Telefone: ")
@@ -262,136 +248,77 @@ def CadastroClientes():
         email = input("Email: ")
         valortotal = 0
         cliente = Cliente(nome, cpf, telefone, endereco, email, valortotal)
-        clientes.append(cliente)
+        clientes[cpf] = cliente
     
-    dados_dict = [cliente.to_dict() for cliente in clientes]
+    client_temp = {id_venda: v.to_dict() for id_venda, v in clientes.items()}
     with open("clientes.json", "w") as arquivo:
-        json.dump(dados_dict, arquivo, indent=4)
+        json.dump(client_temp, arquivo, indent=4)
     pausar()
 
-def CadastroVendedores():
+def CadastroFuncionario(cpf):
     LimparTela()
-    ver = (input("Deseja ver os vendedores Cadastrados s/n? ")).lower()
+    ver = (input(f"Deseja ver os Funcionarios Cadastrados s/n? ")).lower()
     if(ver=="s"):
-        print("Os vendedores cadastrados são: ")
-        for vendedor in vendedores:
-            print(f"Cliente: {vendedor.nome} - CPF: {vendedor.cpf}")
-    cpf = input("Digite o CPF do Vendedor que deseja Cadastrar/Atualizar Dados: ")
-    encontrado = False
-    for vendedor in vendedores:
-        if(cpf==vendedor.cpf):
-            print(f"Atualizando dados do Vendedor {vendedor.nome} ")
-            vendedor.telefone = input("Novo Telefone: ")
-            vendedor.endereco = input("Novo Endereco: ")
-            vendedor.email = input("Novo Email: ")
-            vendedor.senha = input("Nova Senha: ")
-            encontrado = True
-    if(encontrado == False):
-        print("Digite os dados do novo Vendedor: ")
+        print("Os Funcionários cadastrados são: ")
+        print("Gerentes: ")
+        for funcionario in [f for f in funcionarios.values() if f.cargo == 1]:
+            print(f"Cliente: {funcionario.nome} - CPF: {funcionario.cpf}")
+        print("Vendedores: ")   
+        for funcionario in [f for f in funcionarios.values() if f.cargo == 2]:
+            print(f"Cliente: {funcionario.nome} - CPF: {funcionario.cpf}") 
+            pausar()
+        cpfcadastro = ("Digite o CPF do Vendedor/Gerente que deseja Cadastrar/Atualizar Dados: ").strip()
+        encontrado = Verificarfunc(cpfcadastro)
+
+        if encontrado:
+            print(f"Atualizando dados do Vendedor {funcionario[cpfcadastro].nome},(caso não queira atulizar, digite o valor antigo)")
+            funcionario[cpfcadastro].telefone = input("Novo Telefone: ")
+            funcionario[cpfcadastro].endereco = input("Novo Endereco: ")
+            funcionario[cpfcadastro].email = input("Novo Email: ")
+            funcionario[cpfcadastro].senha = input("Nova Senha: ")
+            funcionario[cpfcadastro].cargo = int("Cargo do Funcionário, sendo 1 para Gerente e 2 para Vendedor: ")
+
+    if not encontrado: 
+        print("Digite os dados do Funcionário: ")
         nome = input("Nome: ")
         telefone = input("Telefone: ")
         endereco = input("Endereco: ")
         email = input("Email: ")
         senha = input("Senha: ")
-        vendedor = Funcionario(nome, cpf, telefone, endereco, email, senha)
-        vendedores.append(vendedor)
+        cargo = int("Cargo do Funcionário, sendo 1 para Gerente e 2 para Vendedor: ")
+        funcionario = Funcionario(nome, cpf, telefone, endereco, email, senha, cargo)
+        funcionarios[cpfcadastro] = funcionario
 
-    dados_dict = [vendedor.to_dict_vendedor() for vendedor in vendedores]
-    with open("vendedor.json", "w") as arquivo:
-        json.dump(dados_dict, arquivo, indent=4)
-    pausar()
+    funcionario_temp = {id_venda: v.to_dict() for id_venda, v in funcionarios.items()}
 
-def CadastroGerentes():
-    LimparTela()
-    ver = (input("Deseja ver os vendedores Gerentes s/n?")).lower()
-    if(ver=="s"):
-        print("Os gerentes cadastrados são: ")
-        for gerente in gerentes:
-            print(f"Cliente: {gerente.nome} - CPF: {gerente.cpf}")
-    cpf = input("Digite o CPF do Cliente que deseja Cadastrar/Atualizar Dados: ")
-    encontrado = False
-    for gerente in gerentes:
-        if(cpf==gerente.cpf):
-            print(f"Atualizando dados do Vendedor {gerente.nome} ")
-            gerente.telefone = input("Novo Telefone: ")
-            gerente.endereco = input("Novo Endereco: ")
-            gerente.email = input("Novo Email: ")
-            gerente.senha = input("Nova Senha: ")
-            encontrado = True
-    if(encontrado == False):
-        print("Digite os dados do novo Vendedor: ")
-        nome = input("Nome: ")
-        telefone = input("Telefone: ")
-        endereco = input("Endereco: ")
-        email = input("Email: ")
-        senha = input("Senha: ")
-        gerente = Gerente(nome, cpf, telefone, endereco, email, senha)
-        gerentes.append(gerente)
-
-    dados_dict = [gerente.to_dict_vendedor() for gerente in gerentes]
-    with open("gerentes.json", "w") as arquivo:
-        json.dump(dados_dict, arquivo, indent=4)
-    pausar()
+    with open("vendas.json", "w") as arquivo:
+        json.dump(funcionario_temp, arquivo, indent=4)
 
 def FiltroHoras(cpf, status):
     z = (input("Deseja ver o Relatorio por Dia das compras(s/n)?")).lower()
+    venda_to_filter = vendas.values()
     if z == "s":
         data_alvo_str_i = input("Digite a data do inicio do Período que deseja consultar (dd/mm/aaaa): ")
         data_alvo_str_f = input("Digite a data do Final do Período que deseja consultar (dd/mm/aaaa): ")
-        data_alvo_i = datetime.strptime(data_alvo_str_i, "%d/%m/%y")
-        data_alvo_f = datetime.strptime(data_alvo_str_f, "%d/%m/%y")
-        encontrou = False
-        lista = []
-        for venda in vendas:
-            datadia = venda.registroparahora()
-            if data_alvo_i <= datadia <= data_alvo_f:
-                lista.append(venda)
+        data_alvo_i = datetime.strptime(data_alvo_str_i, "%d/%m/%Y")
+        data_alvo_f = datetime.strptime(data_alvo_str_f, "%d/%m/%Y")
+        venda_to_filter = [v for v in vendas.values() if data_alvo_i <= v.registroparahora() <= data_alvo_f]
+        LimparTela()
+        print(f"Vendas feitas no período de {data_alvo_str_i} há {data_alvo_str_f}")
+    if(status == "1"):
+        venda_to_filter = [v for v in venda_to_filter if v.cpf_vendedor== cpf]
+        print(f" Vendas feitas pelo Vendedor/Funcionário {funcionarios[cpf].nome}:")
+    elif(status== "2"):
+        venda_to_filter = [v for v in venda_to_filter if v.cpf_cliente== cpf]
+        print(f" Vendas feitas para o Cliente {clientes[cpf].nome}:")
+    else:
+        print("Todas as vendas feitas: ")
 
-        if(status == "1"):
-            lista_v = []
-            for venda in lista:
-                if(cpf==venda.cpf_vendedor):
-                    lista_v.append(venda)
-            LimparTela()
-            print(f"Vendas feita pelo Vendedor/Gerente de CPF: {cpf}, no período de {data_alvo_str_i} a {data_alvo_str_f}: ")
-            ImprimirRelatorio(lista_v)
-            pausar()
-
-        elif(status== "2"):
-            lista_c = []
-            for venda in lista:
-                if(cpf==venda.cpf_cliente):
-                    lista_c.append(venda)
-            LimparTela()
-            print(f"Vendas feitas ao Cliente de CPF: {cpf}, no no período de {data_alvo_str_i} a {data_alvo_str_f}:  ")
-            ImprimirRelatorio(lista_c)
-            pausar()
-    else: 
-        if(status == "1"):
-            lista_v = []
-            for venda in lista:
-                if(cpf==venda.cpf_vendedor):
-                    lista_v.append(venda)
-            LimparTela()
-            print(f"Vendas feita pelo Vendedor/Gerente de CPF: {cpf}: ")
-            ImprimirRelatorio(lista_v)
-            pausar()
-        elif(status== "2"):
-            lista_c = []
-            for venda in lista:
-                if(cpf==venda.cpf_cliente):
-                    lista_c.append(venda)
-            LimparTela()
-            print(f"Vendas feitas ao Cliente de CPF: {cpf}:  ")
-            ImprimirRelatorio(lista_c)
-            pausar()
-        elif(status == "3"):
-            LimparTela()
-            print("Todas as Vendas feitas: ")
-            ImprimirRelatorio(vendas)
-            pausar()
+    ImprimirRelatorio(list(venda_to_filter))
+    pausar()
             
 def ImprimirRelatorio(lista):
+    LimparTela()
     somalucro = 0
     somacusto = 0
     somavenda= 0
@@ -401,14 +328,15 @@ def ImprimirRelatorio(lista):
         print(f"Produto {venda.nome_produto}, de ID {venda._ID_produto}")
         print(f"Vendedor/Gerente que realizou a Compra: {venda.nome_vendedor}, de CPF: {venda.cpf_vendedor}")
         print(f"Cliente: {venda.nome_do_cliente}, de CPF {venda.cpf_cliente}")
-        print(f"O preço da Venda de cada produto foi de {venda.preco_venda}R$, com custo de {venda.preco_custo}R$")
-        print(f"Foram comprados: {venda.qua} produtos. Em um valor total de {venda.valortotal}R$")
+        print(f"O preço da Venda de cada produto foi de {venda.preco_venda}R$, com custo de {venda.preco_custo:.2f}R$")
+        print(f"Foram comprados: {venda.qua} produtos. Em um valor total de {venda.valortotal:.2f}R$")
         somavenda += venda.valortotal
         somacusto += venda.custototal
         somalucro += venda.lucrototal
-        print(f"O lucro que foi obtido com esta compra foi de {venda.lucrototal}R$")
+        print(f"O lucro que foi obtido com esta compra foi de {venda.lucrototal:.2f}R$")
 
     print(f"O lucro total durante o periodo deste Relatorio foi de: {somalucro}R$, sendo {somavenda}R$ o Faturamento Bruto e {somacusto}R$ o Custos de Opereção.")
+    print(f"\n ---------------------------------------------------------------------------------------------------------------------------------------------------------")
 
 def Relatorio():
     LimparTela()
@@ -422,158 +350,83 @@ def Relatorio():
         if x == "1":
             LimparTela()
             status = 1
-            y = input("Digite 1 para Gerente e 2 para Vendedor: ")
-            if y == "1":
-                cpf = input("Digite o CPF do Gerente: ")
-                encontrado = False
-                for gerente in gerentes:
-                    if cpf == gerente.cpf:
-                        FiltroHoras(cpf, status)
-                        encontrado =  True
-                if not encontrado:
-                    print("Gerente não Encontrado!")
-                pausar()
-            elif y =="2":
-                cpf = input("Digite o CPF do Vendedor: ")
-                encontrado = False
-                for vendedor in vendedores:
-                    if cpf == vendedor.cpf:
-                        FiltroHoras(cpf, status)
+            cpf_func = input("Digite o CPF do Vendedor/Gerente: ")
+            encontrado = Verificarfunc(cpf_func)
+            if encontrado:
+                FiltroHoras(cpf_func, status)
             if not encontrado:
-                print("Vendedor não Encontrado!")
+                print("Vendedor/Gerente não Encontrado!")
                 pausar()
-            else:
-                print("Opção Digitada Inválida.")
         elif x == "2":
             LimparTela()
             status = "2"
-            cpf = input("Digite o CPF do Cliente: ")
-            encontrado =  False
-            for cliente in clientes:
-                if cpf == cliente.cpf:
-                    FiltroHoras(cpf, status)
-                    encontrado = True
+            cpf_clie = input("Digite o CPF do Cliente: ")
+            encontrado = verificarclientes(cpf_clie)
+            if encontrado:
+                FiltroHoras(cpf_clie, status)
             if not encontrado:
                 print("Cliente não Encontrado!")
                 pausar()
         elif x == "3":
             status = "3"
-            LimparTela()
             ImprimirRelatorio(vendas)
-            pausar
+            pausar()
         elif x == "4":
-            LimparTela()
             print("Você escolheu sair.")
             pausar()
             break
         else:
-            LimparTela()
             print("Opção Digitada Invalida!")
             pausar()
 
-def Menu(cargo):
+def Menu(cpf):
     LimparTela()
     while True:
         print("=======Menu da SGP=======")
-        if(cargo=="2"):
-            print("1 - Estoque")
-            print("2 - Nova Venda")
-            print("3 - Cadastro/Atulizar Clientes")
-            print("4 - Sair")
-
-            escolha = input("\n Escolha uma opção: ")
-            if escolha == "1":
-                Estoque(cargo)
-            elif escolha == "2":
-                NovaVenda(cargo)
-            elif escolha == "3":
-                CadastroClientes()
-            elif escolha == "4":
-                print("Você Escolheu sair.")
-                break
-            else:
-                print("Opção Digitada Invalida!")
-        elif(cargo=="1"):
-            print("1 - Estoque")
-            print("2 - Nova Venda")
-            print("3 - Cadastro/Atulizar Clientes")
-            print("4 - Cadastar/Atualizar Vendedores")
-            print("5 - Cadastar/Atualizar Gerentes")
-            print("6 - Relátorio Financeiro")
-            print("7 - Sair")
-
-            escolha = input("\n Escolha uma opção: ")
-            if escolha == "1":
-                Estoque(cargo)
-            elif escolha == "2":
-                NovaVenda(cargo)
-            elif escolha == "3":
-                CadastroClientes()
-            elif escolha == "4":
-                CadastroVendedores()
+        print("1 - Estoque")
+        print("2 - Nova Venda")
+        print("3 - Cadastro/Atulizar Clientes")
+        if(funcionarios[cpf].cargo == 1):
+            print("4 - Cadastar/Atualizar Funcionarios(Vendedores ou Gerentes)")
+            print("5 - Relátorio Financeiro")
+        print("9 - Sair")
+        escolha = input("\n Escolha uma opção: ")
+        if escolha == "1":
+            Estoque(cpf)
+        elif escolha == "2":
+            NovaVenda(cpf)
+        elif escolha == "3":
+            CadastroClientes()
+        if(funcionarios[cpf].cargo == 1):
+            if escolha == "4":
+                CadastroFuncionario(cpf)
             elif escolha == "5":
-                CadastroGerentes()
-            elif escolha == "6":
                 Relatorio()
-            elif escolha == "7":
-                print("Você Escolheu sair.")
-                break
-            else:
+            elif escolha != ("1", "2", "3", "4", "5","9"):
                 print("Opção Digitada Invalida!")
+                pausar()
+        elif escolha == "9":
+            print("Você Escolheu sair.")
+            break
+        elif escolha != ("1", "2", "3", "4", "5","9"):
+            print("Opção Digitada Invalida!")
+            pausar()
 
 while True:
     LimparTela()
     print("=======Acesso ao Menu da SGP: =======")
-    print("1 - Gerente ")
-    print("2 - Vendedor")
-    validador = input("Selecione seu cargo: ")
-    if(validador=="1"):
-        LimparTela()
-        print("Opção Selecionada: Gerente")
-        verificar = input("Digite seu CPF: ")
-        encontrado = False
-
-        for gerente in gerentes:
-            if(verificar==gerente.cpf):
-                senhat = input(f"Usuario {gerente.nome}, digite a Senha: ")
-                if(gerente.senha==senhat):
-                    print("Acesso Liberado!!")
-                    encontrado = True
-                    acessonome = gerente.nome
-                    acessocpf = gerente.cpf
-                    pausar()
-                    Menu(validador)
-                    break
-                else:
-                    print("Senha incorreta!!")
-                    encontrado = True
-                    break
-        if not encontrado:
-            print("\n Gerente não encontrado!")
+    cpf = input("Digite seu CPF: ").strip()
+    ver = Verificarfunc(cpf)
+    if ver:
+        senha = input("Digite sua Senha: ")
+        if senha == funcionarios[cpf].senha:
+            print("Acesso Liberado!!")
+            pausar()
+            Menu(cpf)
+            break
+        else:
+            print("Senha incorreta!!")
+            break
+    if not ver:
+        print("\n CPF não encontrado, Procure um Gerente.")
         pausar()
-    elif(validador=="2"):
-        LimparTela()
-        print("Opção Selecionada: Vendedor")
-        verificar = input("Digite seu CPF: ")
-        encontrado = False
-
-        for vendedor in vendedores:
-            if(verificar==vendedor.cpf):
-                senhat = input(f"Usuario {vendedor.nome}, digite a Senha: ")
-                if(vendedor.senha==senhat):
-                    print("Acesso Liberado!!")
-                    encontrado = True
-                    acessonome = vendedor.nome
-                    acessocpf = vendedor.cpf
-                    pausar()
-                    Menu(validador)
-                    break
-                else:
-                    print("Senha incorreta!!")
-                    encontrado = True
-                    break
-        if not encontrado:
-            print("\n Vendedor não encontrado!")
-        pausar()
-    else:
-        print("Opção Digitada Invalida.")
