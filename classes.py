@@ -14,7 +14,8 @@ class Pessoa:
             "cpf": self.cpf,
             "telefone" : self.telefone,
             "endereco":self.endereco,
-            "email":self.email
+            "email":self.email,
+            "valortotal":self.valortotal
         }
     
     #função que trasnforma Lista de Dicionarios em Objeto
@@ -25,7 +26,8 @@ class Pessoa:
             dados["cpf"],
             dados["telefone"],
             dados["endereco"],
-            dados["email"]
+            dados["email"],
+            dados["valortotal"]
         )
 
 class Funcionario(Pessoa):
@@ -49,7 +51,8 @@ class Funcionario(Pessoa):
             "telefone" : self.telefone,
             "endereco":self.endereco,
             "email":self.email,
-            "senha":self.senha
+            "senha":self.senha,
+            "cargo":self.cargo
         }
     
     @classmethod
@@ -60,7 +63,8 @@ class Funcionario(Pessoa):
             dados["telefone"],
             dados["endereco"],
             dados["email"],
-            dados["senha"]
+            dados["senha"],
+            dados["cargo"]
         )
 
 class Cliente(Pessoa): 

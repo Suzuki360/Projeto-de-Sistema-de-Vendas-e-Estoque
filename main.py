@@ -30,14 +30,14 @@ if os.path.exists("funcionarios.json"):
         dados = json.load(arquivo)
     for cpf_fun, info in dados.items():
         funcionario_obj = Funcionario.from_dict_vendedor(info)
-        vendas[cpf_fun] = funcionario_obj
+        funcionarios[cpf_fun] = funcionario_obj
 
 if os.path.exists("clientes.json"):
     with open("clientes.json", "r") as arquivo:
         dados = json.load(arquivo)
     for cpf_cli, info in dados.items():
         cliente_obj = Cliente.from_dict(info)
-        vendas[cpf_cli] = cliente_obj
+        clientes[cpf_cli] = cliente_obj
 
 if os.path.exists("produtos.json"):
     with open("produtos.json", "r") as arquivo:
@@ -45,7 +45,7 @@ if os.path.exists("produtos.json"):
     #transformando Lista em Json para Objeto
     for id_pro, info in dados.items():
         prod_obj = Produto.from_dict_produto(info)
-        vendas[id_pro] = prod_obj
+        produtos[id_pro] = prod_obj
 
 if os.path.exists("vendas.json"):
     with open("vendas.json", "r") as arquivo:
@@ -70,7 +70,7 @@ def verificarclientes(verificar):
 
 def salvarprodutos(lista):
     prod_temp = {id_venda: v.to_dict() for id_venda, v in produtos.items()}
-    with open("vendas.json", "w") as arquivo:
+    with open("produtos.json", "w") as arquivo:
         json.dump(prod_temp, arquivo, indent=4)
 
 def salvarvendas(lista):
@@ -127,7 +127,7 @@ def AtualizarEstoque(cpf):
 def ListarProdutos():
     LimparTela()
     print("Produtos em Estoque: ")
-    for produto in produtos:
+    for produto in produtos.values():
         print(f"\nProduto {produto.nome_pro}: ")
         print(f"ID: {produto._ID}")
         print(f"Marca: {produto.marca}")
@@ -193,7 +193,7 @@ def NovaVenda(cpf):
             print(f"Quantidade em Estoque: {produtos[produto_id].quantidade}")
             print(f"Preco de venda: {produtos[produto_id].preco_venda}")
             qua = int(input("\n Digite a quantidade de Produtos que deseja vender: "))
-            compra = produtos[produto_id].preco_venda * qua
+            compra = float(produtos[produto_id].preco_venda) * qua
             custo = produtos[produto_id].preco_custo * qua
             lucro = compra - custo
             print(f"\n O valor total da compra foi de :{compra:.2f}R$")
@@ -231,7 +231,7 @@ def CadastroClientes():
     ver = (input("Deseja ver os clientes Cadastrados s/n?")).lower()
     if(ver=="s"):
         print("Os clientes cadastrados são: ")
-        for cliente in clientes:
+        for cliente in clientes.values():
             print(f"Cliente: {cliente.nome} - CPF: {cliente.cpf}")
     cpf = input("Digite o CPF do Cliente que deseja Cadastrar/Atualizar Dados: ").strip()
     encontrado = verificarclientes(cpf)
@@ -276,7 +276,7 @@ def CadastroFuncionario(cpf):
             funcionario[cpfcadastro].endereco = input("Novo Endereco: ")
             funcionario[cpfcadastro].email = input("Novo Email: ")
             funcionario[cpfcadastro].senha = input("Nova Senha: ")
-            funcionario[cpfcadastro].cargo = int("Cargo do Funcionário, sendo 1 para Gerente e 2 para Vendedor: ")
+            funcionario[cpfcadastro].cargo = int(input("Cargo do Funcionário, sendo 1 para Gerente e 2 para Vendedor: "))
 
     if not encontrado: 
         print("Digite os dados do Funcionário: ")
@@ -291,7 +291,7 @@ def CadastroFuncionario(cpf):
 
     funcionario_temp = {id_venda: v.to_dict() for id_venda, v in funcionarios.items()}
 
-    with open("vendas.json", "w") as arquivo:
+    with open("funcionarios.json", "w") as arquivo:
         json.dump(funcionario_temp, arquivo, indent=4)
 
 def FiltroHoras(cpf, status):
