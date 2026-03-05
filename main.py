@@ -14,10 +14,11 @@ def LimparTela():
 def pausar():
     input(" \n Pressione ENTER para continuar...")
 
+#lembrar de colocar algum cpf valido para primeiro acesso
 funcionarios = {}
-funcionario = Funcionario("Admin", "123", "123", "algum lugar", "admin@gmail", "Senha", 1 )
+funcionario = Funcionario("Admin", "#algumcpfvalido", "123", "algum lugar", "admin@gmail", "Senha", 1 )
 v1 = Funcionario("Vendedor", "456", "456", "Seila", "vendedor@gmail.com", "Codigo", 2)
-funcionarios["123"] = funcionario
+funcionarios["#algumcpfvalido"] = funcionario
 funcionarios["456"] = v1
 clientes = {}
 produtos = {}
@@ -53,6 +54,39 @@ if os.path.exists("vendas.json"):
     for id_venda, info in dados.items():
         venda_obj = Venda.from_dict_venda(info)
         vendas[id_venda] = venda_obj
+
+def inputcpf(string):
+
+    Verificar = True
+
+    while Verificar:
+
+        try:
+            CPF = input(f"{string}")
+            di = [int(d) for d in str(CPF)]
+
+            def verificarcpf2():
+                M = 10*di[1]+9*di[2]+8*di[3]+7*di[4]+6*di[5]+5*di[6]+4*di[7]+3*di[8]+2*di[9]
+                R1 = M%11
+                if(11-R1==di[10]):
+                    return False
+                
+            if(len(di)!=11):
+                print("CPF Invalido! Digite novamente!")
+            else:
+                L = 10*di[0]+9*di[1]+8*di[2]+7*di[3]+6*di[4]+5*di[5]+4*di[6]+3*di[7]+2*di[8]
+                R = L%11
+                if(R==0 or R==1):
+                    if(di[9]==0):
+                        Verificar = verificarcpf2()
+                if(11-R==di[9]):
+                    Verificar = verificarcpf2()
+        except:
+            print("CPF Invalido! Digite novamente!")
+            Verificar = True
+
+    if Verificar == False:
+        return CPF
 
 def Verificarfunc(verificar):
     if verificar in funcionarios:
@@ -181,7 +215,7 @@ def Estoque(cpf):
 
 def NovaVenda(cpf):
     LimparTela()
-    cpf_cliente = input("Digite o CPF do cliente que deseja fazer a venda: ")
+    cpf_cliente = inputcpf("Digite o CPF do cliente que deseja fazer a venda: ")
     encontrado = verificarclientes(cpf_cliente)
     if encontrado:
         print(f"Cliente : {clientes[cpf].nome}")
@@ -233,7 +267,7 @@ def CadastroClientes():
         print("Os clientes cadastrados são: ")
         for cliente in clientes.values():
             print(f"Cliente: {cliente.nome} - CPF: {cliente.cpf}")
-    cpf = input("Digite o CPF do Cliente que deseja Cadastrar/Atualizar Dados: ").strip()
+    cpf = inputcpf("Digite o CPF do Cliente que deseja Cadastrar/Atualizar Dados: ").strip()
     encontrado = verificarclientes(cpf)
     if encontrado:
         print(f"Atualizando dados do Cliente {clientes[cpf].nome} ")
@@ -267,7 +301,7 @@ def CadastroFuncionario(cpf):
         for funcionario in [f for f in funcionarios.values() if f.cargo == 2]:
             print(f"Cliente: {funcionario.nome} - CPF: {funcionario.cpf}") 
             pausar()
-        cpfcadastro = ("Digite o CPF do Vendedor/Gerente que deseja Cadastrar/Atualizar Dados: ").strip()
+        cpfcadastro = inputcpf("Digite o CPF do Vendedor/Gerente que deseja Cadastrar/Atualizar Dados: ").strip()
         encontrado = Verificarfunc(cpfcadastro)
 
         if encontrado:
@@ -415,7 +449,7 @@ def Menu(cpf):
 while True:
     LimparTela()
     print("=======Acesso ao Menu da SGP: =======")
-    cpf = input("Digite seu CPF: ").strip()
+    cpf = inputcpf("Digite seu CPF: ").strip()
     ver = Verificarfunc(cpf)
     if ver:
         senha = input("Digite sua Senha: ")
